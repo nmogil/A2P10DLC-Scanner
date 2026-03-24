@@ -1,0 +1,14 @@
+# Cloudflare Worker secrets (copy to .dev.vars for local dev)
+# See: https://developers.cloudflare.com/workers/configuration/secrets/
+
+# Firecrawl API key for URL crawling (https://firecrawl.dev)
+FIRECRAWL_API_KEY=fc-your-key-here
+
+# Cloudflare AI Gateway URL (set in CF dashboard for production)
+AI_GATEWAY_URL=https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-name>/openrouter/v1/chat/completions
+
+# Cloudflare AI Gateway token (set via wrangler secret put CF_AIG_TOKEN)
+CF_AIG_TOKEN=your-cf-aig-token-here
+
+# Comma-separated allowed origins for CORS
+ALLOWED_ORIGINS=http://localhost:3000

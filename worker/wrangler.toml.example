@@ -1,0 +1,20 @@
+name = "a2p-check-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "a2p-check-db"
+database_id = "<your-d1-database-id>"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "<your-kv-namespace-id>"
+
+[[rules]]
+type = "Text"
+globs = ["**/*.yaml"]
+
+[vars]
+ALLOWED_ORIGINS = "http://localhost:3000,https://a2pcheck.com,https://www.a2pcheck.com"
+RULES_VERSION = "2026-03-18.1"

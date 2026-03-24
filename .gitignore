@@ -1,0 +1,12 @@
+node_modules/
+.wrangler/
+.next/
+.env
+.env.local
+.dev.vars
+dist/
+*.tsbuildinfo
+.vercel
+twilio-docs/
+.vscode/
+worker/wrangler.toml

@@ -1,0 +1,477 @@
+openapi: 3.1.0
+info:
+  title: A2PCheck API
+  version: 1.0.0
+  description: |
+    A2P 10DLC campaign pre-scanning API. Analyze SMS campaigns for compliance
+    issues before submitting to carrier registration.
+  contact:
+    email: api@a2pcheck.com
+
+servers:
+  - url: https://api.a2pcheck.com
+    description: Production
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/scan:
+    post:
+      operationId: fullScan
+      summary: Full campaign scan
+      description: |
+        Performs a full campaign scan including AI analysis and URL crawling.
+        Takes approximately 15–20 seconds.
+
+        **Rate limits (API):** 10 requests/minute, 100 requests/day per API key.
+      x-ratelimit:
+        perMinute: 10
+        perDay: 100
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanRequest'
+      responses:
+        '200':
+          description: Scan completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Inactive API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/scan/quick:
+    post:
+      operationId: quickScan
+      summary: Quick campaign scan
+      description: |
+        Performs a quick scan that skips URL crawling. Takes approximately 5–8 seconds.
+        Fields that depend on URL content (e.g. privacy policy, terms of service)
+        will return YELLOW tier placeholders indicating they were not checked.
+
+        **Rate limits (API):** 30 requests/minute, 300 requests/day per API key.
+      x-ratelimit:
+        perMinute: 30
+        perDay: 300
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanRequest'
+      responses:
+        '200':
+          description: Scan completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Inactive API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/health:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      description: Returns service health status. No authentication required.
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    const: ok
+
+  /api/v1/openapi.yaml:
+    get:
+      operationId: getOpenApiSpec
+      summary: OpenAPI specification
+      description: Returns this OpenAPI specification as YAML. No authentication required.
+      security: []
+      responses:
+        '200':
+          description: OpenAPI spec
+          content:
+            text/yaml:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        API key with `a2p_live_` prefix. Include as a Bearer token in the
+        Authorization header: `Authorization: Bearer a2p_live_your_key`
+
+  schemas:
+    UseCaseType:
+      type: string
+      enum:
+        - MARKETING
+        - ACCOUNT_NOTIFICATION
+        - CUSTOMER_CARE
+        - DELIVERY_NOTIFICATION
+        - FRAUD_ALERT
+        - HIGHER_EDUCATION
+        - LOW_VOLUME
+        - MIXED
+        - POLLING_VOTING
+        - PUBLIC_SERVICE_ANNOUNCEMENT
+        - SECURITY_ALERT
+        - TWO_FACTOR_AUTH
+        - CHARITY
+        - EMERGENCY
+        - POLITICAL
+        - SWEEPSTAKE
+
+    ScanTier:
+      type: string
+      enum:
+        - RED
+        - YELLOW
+        - GREEN
+      description: |
+        Compliance risk tier.
+        - **GREEN** — Likely to pass registration
+        - **YELLOW** — May have issues; review recommended
+        - **RED** — Likely to be rejected
+
+    ScanRequest:
+      type: object
+      required:
+        - useCaseType
+        - campaignDescription
+        - sampleMessages
+        - messageFlow
+      properties:
+        useCaseType:
+          $ref: '#/components/schemas/UseCaseType'
+        campaignDescription:
+          type: string
+          minLength: 1
+          maxLength: 4096
+        sampleMessages:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          minItems: 2
+          maxItems: 5
+        messageFlow:
+          type: string
+          minLength: 1
+          maxLength: 4096
+        businessName:
+          type: string
+        privacyPolicyUrl:
+          type: string
+          format: uri
+        websiteUrl:
+          type: string
+          format: uri
+        termsOfServiceUrl:
+          type: string
+          format: uri
+        optInKeywords:
+          type: array
+          items:
+            type: string
+        optOutKeywords:
+          type: array
+          items:
+            type: string
+        helpKeywords:
+          type: array
+          items:
+            type: string
+        optInMessage:
+          type: string
+        optOutMessage:
+          type: string
+        helpMessage:
+          type: string
+        embeddedLinks:
+          type: boolean
+        embeddedPhoneNumbers:
+          type: boolean
+        ageGatedContent:
+          type: boolean
+        directLending:
+          type: boolean
+        numberPool:
+          type: boolean
+
+    ScanResponse:
+      type: object
+      required:
+        - scanId
+        - timestamp
+        - rulesVersion
+        - overallTier
+        - overallSummary
+        - criticalIssues
+        - warnings
+        - fieldResults
+        - metadata
+      properties:
+        scanId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        rulesVersion:
+          type: string
+        overallTier:
+          $ref: '#/components/schemas/ScanTier'
+        overallSummary:
+          type: string
+        criticalIssues:
+          type: array
+          items:
+            $ref: '#/components/schemas/CriticalIssue'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Warning'
+        fieldResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldResult'
+        metadata:
+          $ref: '#/components/schemas/ScanMetadata'
+
+    FieldResult:
+      type: object
+      required:
+        - field
+        - displayName
+        - tier
+        - rationale
+        - issues
+        - suggestions
+        - evidence
+      properties:
+        field:
+          type: string
+        displayName:
+          type: string
+        tier:
+          $ref: '#/components/schemas/ScanTier'
+        rationale:
+          type: string
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldIssue'
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/FixSuggestion'
+        evidence:
+          type: object
+          required:
+            - source
+          properties:
+            source:
+              type: string
+              enum:
+                - deterministic
+                - ai
+                - firecrawl
+                - ai+firecrawl
+
+    FieldIssue:
+      type: object
+      required:
+        - severity
+        - message
+      properties:
+        severity:
+          type: string
+          enum:
+            - critical
+            - warning
+            - info
+        message:
+          type: string
+        twilioErrorCode:
+          type:
+            - string
+            - 'null'
+
+    FixSuggestion:
+      type: object
+      required:
+        - issue
+        - fix
+      properties:
+        issue:
+          type: string
+        fix:
+          type: string
+        example:
+          type: string
+
+    CriticalIssue:
+      type: object
+      required:
+        - severity
+        - message
+        - twilioErrorCode
+      properties:
+        severity:
+          type: string
+          const: critical
+        message:
+          type: string
+        twilioErrorCode:
+          type:
+            - string
+            - 'null'
+
+    Warning:
+      type: object
+      required:
+        - severity
+        - message
+      properties:
+        severity:
+          type: string
+          const: warning
+        message:
+          type: string
+
+    ScanMetadata:
+      type: object
+      required:
+        - scanDurationMs
+        - fieldsAnalyzed
+        - aiModel
+        - urlsCrawled
+      properties:
+        scanDurationMs:
+          type: number
+        fieldsAnalyzed:
+          type: integer
+        aiModel:
+          type: string
+        urlsCrawled:
+          type: array
+          items:
+            type: string
+        quickScan:
+          type: boolean
+        partial:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - traceId
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - UNAUTHORIZED
+                - FORBIDDEN
+                - RATE_LIMITED
+                - INTERNAL_ERROR
+                - TIMEOUT
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                required:
+                  - issue
+                properties:
+                  field:
+                    type: string
+                  issue:
+                    type: string
+            retryAfterSeconds:
+              type: number
+              description: Present on 429 responses. Seconds to wait before retrying.
+            traceId:
+              type: string
+              format: uuid
+              description: Unique identifier for the request, useful for support.

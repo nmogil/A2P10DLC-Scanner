@@ -1,0 +1,40 @@
+"use client";
+
+import { FixSuggestion as FixSuggestionType } from "@/lib/types";
+import { Copy, Check } from "lucide-react";
+import { useState } from "react";
+
+export default function FixSuggestion({ suggestion }: { suggestion: FixSuggestionType }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="bg-white border border-stone-200 rounded-lg p-4 text-sm">
+      <p className="text-stone-500 text-xs uppercase tracking-wide mb-1">
+        {suggestion.issue}
+      </p>
+      <p className="text-stone-800">{suggestion.fix}</p>
+      {suggestion.example && (
+        <div className="mt-3 bg-stone-50 border border-stone-200 rounded-md p-3 font-mono text-xs text-stone-600 relative">
+          {suggestion.example}
+          <button
+            onClick={() => handleCopy(suggestion.example!)}
+            className="absolute top-2 right-2 p-1 rounded hover:bg-stone-200 text-stone-400 hover:text-stone-600 transition-colors"
+            aria-label="Copy example to clipboard"
+          >
+            {copied ? (
+              <Check size={14} className="text-green-600" />
+            ) : (
+              <Copy size={14} />
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
