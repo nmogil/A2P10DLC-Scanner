@@ -6,7 +6,7 @@ info:
     A2P 10DLC campaign pre-scanning API. Analyze SMS campaigns for compliance
     issues before submitting to carrier registration.
   contact:
-    email: api@a2pcheck.com
+    email: hello@mogilventures.com
 
 servers:
   - url: https://api.a2pcheck.com

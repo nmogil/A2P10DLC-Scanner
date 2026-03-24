@@ -189,7 +189,7 @@ export default function ApiDocs() {
               API keys are manually issued during the beta period. Contact us to request access.
             </p>
             <a
-              href="mailto:api@a2pcheck.com"
+              href="mailto:hello@mogilventures.com"
               className="inline-flex items-center gap-2 rounded-lg bg-stone-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-stone-700 transition-colors"
             >
               <Mail size={16} />
